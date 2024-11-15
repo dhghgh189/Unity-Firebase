@@ -60,8 +60,12 @@ public class BackendManager : Singleton<BackendManager>
                 auth = null;
             }
 
-            // Dependencies Check가 완료된 후 Login UI를 표시한다.
-            FindAnyObjectByType<UI_Login>(FindObjectsInactive.Include).gameObject.SetActive(true);
+            // 인증 서비스가 불가능한 경우
+            if (auth == null)
+            {
+                // 에러 상황을 표시
+                FindAnyObjectByType<UI_Login>().ShowInfoPanel("Backend Error!\nPlease Exit Game", Color.red);
+            }
         });
     }
 }
