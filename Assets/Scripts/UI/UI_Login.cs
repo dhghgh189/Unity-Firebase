@@ -14,6 +14,13 @@ public class UI_Login : UIBase
 
     private void Start()
     {
+        // Check Backend Status
+        if (BackendManager.Auth == null)
+        {
+            ShowInfoPanel("Backend Error!\nPlease Exit Game...", Color.red);
+            return;
+        }
+
         // InfoPanel은 초기에 숨긴다.
         HideInfoPanel();
 
