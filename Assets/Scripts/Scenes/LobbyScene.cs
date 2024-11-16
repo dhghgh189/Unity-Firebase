@@ -11,9 +11,10 @@ public class LobbyScene : MonoBehaviourPunCallbacks
 {
     public enum Panel { LobbyPanel, RoomPanel }
 
-    [SerializeField] UI_MenuPanel menuPanel;
+    [SerializeField] GameObject menuPanel;
     [SerializeField] UI_RoomListPanel roomListPanel;
     [SerializeField] UI_RoomPanel roomPanel;
+    [SerializeField] UI_CreateRoomPanel createRoomPanel;
 
     void Start()
     {
@@ -64,6 +65,7 @@ public class LobbyScene : MonoBehaviourPunCallbacks
     public override void OnCreatedRoom()
     {
         Debug.Log($"规 积己 己傍 : {PhotonNetwork.CurrentRoom.Name}");
+        createRoomPanel.gameObject.SetActive(false);
     }
 
     // 规俊 甸绢埃 版快

@@ -5,9 +5,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class UI_MenuPanel : UIBase
+public class UI_Lobby : UIBase
 {
-    [SerializeField] UI_CreateRoomPanel createRoomPanel;
     private void OnEnable()
     {
         // Create Room 버튼 이벤트 추가
@@ -18,7 +17,7 @@ public class UI_MenuPanel : UIBase
         AddUIEvent(Get("btnLeaveLobby"), Enums.UIEvent.PointerClick, LeaveLobby);
 
         // Create Room Panel 비활성화
-        createRoomPanel.gameObject.SetActive(false);
+        Get("CreateRoomPanel").gameObject.SetActive(false);
     }
 
     private void OnDisable()
@@ -34,7 +33,7 @@ public class UI_MenuPanel : UIBase
     public void CreateRoom(PointerEventData eventData)
     {
         // Create Room Panel 활성화
-        createRoomPanel.gameObject.SetActive(true);
+        Get("CreateRoomPanel").gameObject.SetActive(true);
     }
 
     public void QuickJoin(PointerEventData eventData)
