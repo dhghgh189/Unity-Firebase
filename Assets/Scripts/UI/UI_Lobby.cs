@@ -9,7 +9,6 @@ using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.Rendering;
 using UnityEngine.UI;
-using static UnityEditor.ShaderData;
 
 public class UI_Lobby : UIBase
 {
