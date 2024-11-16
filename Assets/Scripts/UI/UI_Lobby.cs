@@ -97,6 +97,7 @@ public class UI_Lobby : UIBase
         // failed callback
         () =>
         {
+            Debug.LogError("ReauthenticateAsync encountered an error");
             // 완료되지 못한 사유 출력
             ShowInfoPopup("Check Account!", Color.red);
         });
@@ -112,13 +113,12 @@ public class UI_Lobby : UIBase
             // 작업이 취소된 경우
             if (task.IsCanceled)
             {
-                ShowInfoPopup("ReauthenticateAndRetrieveDataAsync was canceled.");
+                ShowInfoPopup("ReauthenticateAsync was canceled.");
                 return;
             }
             // 작업이 완료되지 않은 경우
             if (task.IsFaulted)
             {
-                Debug.LogError("ReauthenticateAndRetrieveDataAsync encountered an error");
                 failedCallback?.Invoke();
                 return;
             }
