@@ -22,6 +22,8 @@ public class UI_Lobby : UIBase
         AddUIEvent(Get("btnLeaveLobby"), Enums.UIEvent.PointerClick, LeaveLobby);
         // Change Profile 버튼 이벤트 추가
         AddUIEvent(Get("btnChangeProfile"), Enums.UIEvent.PointerClick, ShowAuthPanelForChangeProfile);
+        // Delete Account 버튼 이벤트 추가
+        AddUIEvent(Get("btnDeleteAccount"), Enums.UIEvent.PointerClick, ShowAuthPanelForDeleteAccount);
         // Confirm Change Profile 버튼 이벤트 추가
         AddUIEvent(Get("btnConfirmChangeProfile"), Enums.UIEvent.PointerClick, ConfirmChangeProfile);
 
@@ -39,6 +41,8 @@ public class UI_Lobby : UIBase
         RemoveUIEvent(Get("btnLeaveLobby"), Enums.UIEvent.PointerClick, LeaveLobby);
         // Change Profile 버튼 이벤트 제거
         RemoveUIEvent(Get("btnChangeProfile"), Enums.UIEvent.PointerClick, ShowAuthPanelForChangeProfile);
+        // Delete Account 버튼 이벤트 제거
+        RemoveUIEvent(Get("btnDeleteAccount"), Enums.UIEvent.PointerClick, ShowAuthPanelForDeleteAccount);
         // Confirm Change Profile 버튼 이벤트 제거
         RemoveUIEvent(Get("btnConfirmChangeProfile"), Enums.UIEvent.PointerClick, ConfirmChangeProfile);
     }
@@ -179,16 +183,73 @@ public class UI_Lobby : UIBase
     }
     #endregion
 
+    #region Delete Account
+    public void ShowAuthPanelForDeleteAccount(PointerEventData eventData)
+    {
+        Get<UI_CheckAuthPanel>("CheckAuthPanel").EnableAuthPanel(
+        // success callback
+        () =>
+        {
+            Get("CheckAuthPanel").SetActive(false);
+            ShowQuestionPopup(DeleteAccount, "Are you sure you want to delete account?", Color.red);
+        },
+        // failed callback
+        () =>
+        {
+            Debug.LogError("ReauthenticateAsync encountered an error");
+            // 완료되지 못한 사유 출력
+            ShowInfoPopup("Check Account!", Color.red);
+        });
+    }
+
+    public void DeleteAccount()
+    {
+        FirebaseUser user = BackendManager.Auth.CurrentUser;
+
+        user.DeleteAsync().ContinueWithOnMainThread(task =>
+        {
+            // 작업이 취소된 경우
+            if (task.IsCanceled)
+            {
+                ShowInfoPopup("DeleteAsync was canceled.");
+                return;
+            }
+            // 작업이 완료되지 않은 경우
+            if (task.IsFaulted)
+            {
+                Debug.LogError($"DeleteAsync encountered an error");
+                string msg = task.Exception.Message;
+
+                // 완료되지 못한 사유 출력
+                ShowInfoPopup($"{msg.Substring(msg.IndexOf('(') + 1).Replace(')', ' ')}");
+                return;
+            }
+
+            // 계정 삭제 완료
+            Debug.Log("Account Delete Successfully!");
+
+            // 로비에서 퇴장
+            PhotonNetwork.LeaveLobby();
+            Get("QuestionPopup").SetActive(false);
+        });
+    }
+    #endregion
+
     public void LeaveLobby(PointerEventData eventData)
     {
         // 로비 나가기 요청
         PhotonNetwork.LeaveLobby();
     }
 
-    public void ShowInfoPopup(string msg, Color? color = null)
+    public void ShowInfoPopup(in string msg, Color? color = null)
     {
         Get<Text>("InfoPopupMessageText").text = msg;
         Get<Text>("InfoPopupMessageText").color = color ?? Color.black;
         Get("InfoPopup").SetActive(true);
+    }
+
+    public void ShowQuestionPopup(UnityAction yesCallback, in string msg, Color? color = null)
+    {
+        Get<UI_QuestionPopup>("QuestionPopup").ShowQuestionPopup(yesCallback, msg, color);
     }
 }
