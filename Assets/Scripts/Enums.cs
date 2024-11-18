@@ -8,4 +8,12 @@ public static class Enums
     {
         PointerClick = 0,
     }
+
+    public enum Jobs
+    {
+        Warrior = 0,
+        Mage,
+        Logue,
+        Length,
+    }
 }
