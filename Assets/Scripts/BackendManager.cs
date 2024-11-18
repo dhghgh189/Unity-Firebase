@@ -1,5 +1,6 @@
 using Firebase;
 using Firebase.Auth;
+using Firebase.Database;
 using Firebase.Extensions;
 using System;
 using System.Collections;
@@ -11,8 +12,11 @@ public class BackendManager : Singleton<BackendManager>
 {
     FirebaseApp app;
     FirebaseAuth auth;
+    FirebaseDatabase db;
+
     public static FirebaseApp App { get { return Instance.app; } }
     public static FirebaseAuth Auth { get { return Instance.auth; } }
+    public static FirebaseDatabase Db { get { return Instance.db; } }
 
     protected override void Init()
     {
@@ -39,6 +43,9 @@ public class BackendManager : Singleton<BackendManager>
 
                     auth = FirebaseAuth.DefaultInstance;
                     Debug.Log("[BackendManager] <color=green>Get Auth Successfully</color>");
+
+                    db = FirebaseDatabase.DefaultInstance;
+                    Debug.Log("[BackendManager] <color=green>Get Db Successfully</color>");
                 }
                 catch (Exception e)
                 {
@@ -50,6 +57,9 @@ public class BackendManager : Singleton<BackendManager>
 
                     if (auth == null)
                         Debug.LogError("[BackendManager] Can't get Auth");
+
+                    if (db == null)
+                        Debug.LogError("[BackendManager] Can't get Db");
                 }
             }
             // 서비스하기에 불안정한 상황
@@ -58,10 +68,11 @@ public class BackendManager : Singleton<BackendManager>
                 Debug.LogError($"[BackendManager] Check Dependencies Failed.. {task.Result}");
                 app = null;
                 auth = null;
+                db = null;
             }
 
-            // 인증 서비스가 불가능한 경우
-            if (auth == null)
+            // 정상 서비스가 불가능한 경우
+            if (auth == null || db == null)
             {
                 // 에러 상황을 표시
                 FindAnyObjectByType<UI_Login>().ShowInfoPanel("Backend Error!\nPlease Exit Game", Color.red);
