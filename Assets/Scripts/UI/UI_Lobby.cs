@@ -1,4 +1,5 @@
 using Firebase.Auth;
+using Firebase.Database;
 using Firebase.Extensions;
 using Photon.Pun;
 using Photon.Realtime;
@@ -26,6 +27,10 @@ public class UI_Lobby : UIBase
         AddUIEvent(Get("btnDeleteAccount"), Enums.UIEvent.PointerClick, ShowAuthPanelForDeleteAccount);
         // Confirm Change Profile 버튼 이벤트 추가
         AddUIEvent(Get("btnConfirmChangeProfile"), Enums.UIEvent.PointerClick, ConfirmChangeProfile);
+        // Search User 버튼 이벤트 추가
+        AddUIEvent(Get("btnSearchUser"), Enums.UIEvent.PointerClick, ShowSearchPanel);
+        // Search User Confirm 버튼 이벤트 추가
+        AddUIEvent(Get("btnSearchUserConfirm"), Enums.UIEvent.PointerClick, SearchUser);
 
         // Create Room Panel 비활성화
         Get("CreateRoomPanel").gameObject.SetActive(false);
@@ -45,6 +50,10 @@ public class UI_Lobby : UIBase
         RemoveUIEvent(Get("btnDeleteAccount"), Enums.UIEvent.PointerClick, ShowAuthPanelForDeleteAccount);
         // Confirm Change Profile 버튼 이벤트 제거
         RemoveUIEvent(Get("btnConfirmChangeProfile"), Enums.UIEvent.PointerClick, ConfirmChangeProfile);
+        // Search User 버튼 이벤트 제거
+        RemoveUIEvent(Get("btnSearchUser"), Enums.UIEvent.PointerClick, ShowSearchPanel);
+        // Search User Confirm 버튼 이벤트 제거
+        RemoveUIEvent(Get("btnSearchUserConfirm"), Enums.UIEvent.PointerClick, SearchUser);
     }
 
     public void CreateRoom(PointerEventData eventData)
@@ -252,4 +261,91 @@ public class UI_Lobby : UIBase
     {
         Get<UI_QuestionPopup>("QuestionPopup").ShowQuestionPopup(yesCallback, msg, color);
     }
+
+    #region Search User
+    public void ShowSearchPanel(PointerEventData eventData)
+    {
+        Get("SearchUserPanel").SetActive(true);
+    }
+
+    public void SearchUser(PointerEventData eventData)
+    {
+        string userName = Get<InputField>("SearchUserInputField").text;
+
+        if (string.IsNullOrEmpty(userName))
+        {
+            ShowInfoPopup("Please Enter UserName!", Color.red);
+            return;
+        }
+
+        // DB에서 User ID를 검색한다.
+        DatabaseReference userIdRef = BackendManager.Db.RootReference.Child($"UserID/{userName}/Uid");
+        userIdRef.GetValueAsync().ContinueWithOnMainThread(task =>
+        {
+            // 작업이 취소된 경우
+            if (task.IsCanceled)
+            {
+                ShowInfoPopup("GetValueAsync was canceled.");
+                return;
+            }
+            // 작업이 완료되지 않은 경우
+            if (task.IsFaulted)
+            {
+                Debug.LogError($"GetValueAsync encountered an error");
+                string msg = task.Exception.Message;
+
+                // 완료되지 못한 사유 출력
+                ShowInfoPopup($"{msg.Substring(msg.IndexOf('(') + 1).Replace(')', ' ')}");
+                return;
+            }
+
+            if (task.Result.Value == null)
+            {
+                ShowInfoPopup($"Can't find User!", Color.red);
+                return;
+            }
+
+            // 정보가 존재하는 경우
+            string uid = task.Result.Value.ToString();
+
+            // 검색한 User ID를 통해 User Data를 검색한다
+            // User ID를 통해 순차 탐색없이 특정 데이터를 바로 탐색 가능함
+            DatabaseReference _userDataRef = BackendManager.Db.RootReference.Child($"UserData/{uid}");
+
+            _userDataRef.GetValueAsync().ContinueWithOnMainThread(task =>
+            {
+                if (task.IsCanceled)
+                {
+                    ShowInfoPopup("GetValueAsync was canceled.");
+                    return;
+                }
+                if (task.IsFaulted)
+                {
+                    string msg = task.Exception.Message;
+                    ShowInfoPopup($"{msg.Substring(msg.IndexOf('(') + 1).Replace(')', ' ')}");
+                    return;
+                }
+
+                DataSnapshot snapshot = task.Result;
+
+                // 아직 설정된 값이 없는 경우
+                if (snapshot.Value == null)
+                {
+                    ShowInfoPopup("Exception : Can't find UserData", Color.red);
+                    return;
+                }
+                else
+                {
+                    // 읽은 데이터를 json 형태로 반환
+                    string jsonStr = snapshot.GetRawJsonValue();
+                    // json 형식 데이터를 UserData 객체로 역직렬화
+                    UserData userData = JsonUtility.FromJson<UserData>(jsonStr);
+
+                    // User Info UI 활성화
+                    Get<UI_UserInfoPanel>("UserInfoPanel").ShowUserInfo(userData);
+                }
+            });
+        });
+    }
+    #endregion
 }

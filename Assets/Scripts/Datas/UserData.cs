@@ -27,4 +27,12 @@ public class PlayerStat
         Int = 4;
         Luck = 4;
     }
+
+    public void UpdateStat(int level)
+    {
+        Strength = level * 4;
+        Dex = level * 4;
+        Int = level * 4;
+        Luck = level * 4;
+    }
 }
