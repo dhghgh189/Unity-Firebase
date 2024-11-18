@@ -181,17 +181,18 @@ public class UI_Login : UIBase
         switch (eError)
         {
             // 존재하지 않는 이메일인 경우 별도 메시지 출력
-            // Wrong Password로 인한 실패 사실을 알리는 경우 해킹의 위험이 있으므로
-            // Wrong Password case는 제외하였음
+            // UserNotFound와 Wrong Password로 인한 실패 사실을 알리는 경우
+            // 해킹의 위험이 있으므로 위 두가지 case에 대한 정보제공을 통일
             case AuthError.UserNotFound:
-                ShowInfoPopup("User not exist!", Color.red);
+            case AuthError.WrongPassword:
+                ShowInfoPopup("Check Your Account!", Color.red);
                 break;
             case AuthError.Failure:
             case AuthError.ApiNotAvailable:
                 ShowInfoPopup("System Error!", Color.red);
                 break;
             default:
-                ShowInfoPopup("Check Your Account!", Color.red);
+                ShowInfoPopup("Exception!", Color.red);
                 break;
         }
     }
@@ -241,9 +242,12 @@ public class UI_Login : UIBase
             return;
         }
 
-        // email을 통해 서비스 제공업체 목록을 가져온다.
+        // FetchProvidersForEmailAsync : email을 통해 서비스 제공업체 목록을 가져온다.
         // 해당 email을 통해 가져온 목록에 값이 하나라도 있으면 기존에 존재하는 email이며
-        // 목록에 값이 하나도 없다면 아직 존재하지 않는 email으로 판단한다.
+        // 목록에 값이 하나도 없다면 아직 존재하지 않는 email으로 판단할 수 있겠다.
+
+        // 보안상의 이유로 기본적으로 작동하지 않지만, 인증 옵션 변경 시 동작가능
+        // 실 사용 시에는 보안문제로 인해 별도 DB를 통해 계정정보를 확인할 필요가 있어보인다. 
         BackendManager.Auth.FetchProvidersForEmailAsync(email)
             .ContinueWithOnMainThread(task =>
         {
